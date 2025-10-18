@@ -49,18 +49,6 @@ public class PlayerController : MonoBehaviour
 
     void HandleMouseLook()
     {
-        // Get mouse input
-        float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
-        float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
-
-        // Rotate camera up/down
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
-        cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
-
-        // Rotate player left/right
-        transform.Rotate(Vector3.up * mouseX);
-
         // Press Escape to unlock cursor
         if (Input.GetKeyDown(KeyCode.Escape))
         {
@@ -68,11 +56,31 @@ public class PlayerController : MonoBehaviour
             Cursor.visible = true;
         }
 
-        // Click to lock cursor again
+        // Only do mouse look if cursor is locked
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            // Get mouse input
+            float mouseX = Input.GetAxis("Mouse X") * mouseSensitivity;
+            float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity;
+
+            // Rotate camera up/down
+            xRotation -= mouseY;
+            xRotation = Mathf.Clamp(xRotation, -maxLookAngle, maxLookAngle);
+            cameraTransform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+
+            // Rotate player left/right
+            transform.Rotate(Vector3.up * mouseX);
+        }
+
+        // Click to lock cursor again (only when not clicking on UI)
         if (Input.GetMouseButtonDown(0) && Cursor.lockState == CursorLockMode.None)
         {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+            // Check if we're clicking on UI
+            if (!UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
     }
 
@@ -95,18 +103,54 @@ public class PlayerController : MonoBehaviour
 
         // Apply sprint
         float currentSpeed = moveSpeed;
-        if (Input.GetKey(KeyCode.LeftShift))
+        bool isSprinting = Input.GetKey(KeyCode.LeftShift);
+        if (isSprinting)
         {
             currentSpeed *= sprintMultiplier;
-            animator.SetFloat("Speed", currentSpeed, 0.1f, Time.deltaTime);
         }
 
         // Move the character
         controller.Move(move * currentSpeed * Time.deltaTime);
 
+        // Calculate actual movement speed for animator
+        Vector3 horizontalVelocity = new Vector3(controller.velocity.x, 0, controller.velocity.z);
+        float currentMovementSpeed = horizontalVelocity.magnitude;
+
+        // Update Animator parameters
+        UpdateAnimator(currentMovementSpeed, isSprinting, moveX, moveZ);
+
         // Apply gravity
         velocity.y += gravity * Time.deltaTime;
         controller.Move(velocity * Time.deltaTime);
+    }
+
+    void UpdateAnimator(float speed, bool isSprinting, float moveX, float moveZ)
+    {
+        if (animator == null) return;
+
+        // Speed parameter (0 = idle, 1 = walk, 2 = run)
+        animator.SetFloat("Speed", speed);
+
+        // Normalized speed (0-1 range)
+        float normalizedSpeed = Mathf.Clamp01(speed / (moveSpeed * sprintMultiplier));
+        animator.SetFloat("SpeedNormalized", normalizedSpeed);
+
+        // Is moving boolean
+        bool isMoving = speed > 0.1f;
+        animator.SetBool("IsMoving", isMoving);
+
+        // Is sprinting boolean
+        animator.SetBool("IsSprinting", isSprinting && isMoving);
+
+        // Direction parameters (for blend trees)
+        animator.SetFloat("MoveX", moveX);
+        animator.SetFloat("MoveZ", moveZ);
+
+        // Is grounded
+        animator.SetBool("IsGrounded", isGrounded);
+
+        // Vertical velocity (for jump/fall animations)
+        animator.SetFloat("VerticalVelocity", velocity.y);
     }
 
     void HandleJump()
