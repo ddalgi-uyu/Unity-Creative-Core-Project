@@ -22,10 +22,12 @@ public class PlayerController : MonoBehaviour
     private Vector3 velocity;
     private bool isGrounded;
     private float xRotation = 0f;
+    private Animator animator;
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
+        animator = GetComponent<Animator>();
 
         // Lock and hide cursor
         Cursor.lockState = CursorLockMode.Locked;
@@ -96,6 +98,7 @@ public class PlayerController : MonoBehaviour
         if (Input.GetKey(KeyCode.LeftShift))
         {
             currentSpeed *= sprintMultiplier;
+            animator.SetFloat("Speed", currentSpeed, 0.1f, Time.deltaTime);
         }
 
         // Move the character
