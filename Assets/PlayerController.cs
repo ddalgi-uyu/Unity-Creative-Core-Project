@@ -99,7 +99,7 @@ public class PlayerController : MonoBehaviour
         float moveZ = Input.GetAxis("Vertical");   // W/S or Up/Down arrows
 
         // Calculate movement direction
-        Vector3 move = transform.right * moveX + transform.forward * moveZ;
+        Vector3 moveDirection = transform.right * moveX + transform.forward * moveZ;
 
         // Apply sprint
         float currentSpeed = moveSpeed;
@@ -110,7 +110,7 @@ public class PlayerController : MonoBehaviour
         }
 
         // Move the character
-        controller.Move(move * currentSpeed * Time.deltaTime);
+        controller.Move(moveDirection * currentSpeed * Time.deltaTime);
 
         // Calculate actual movement speed for animator
         Vector3 horizontalVelocity = new Vector3(controller.velocity.x, 0, controller.velocity.z);
@@ -130,27 +130,6 @@ public class PlayerController : MonoBehaviour
 
         // Speed parameter (0 = idle, 1 = walk, 2 = run)
         animator.SetFloat("Speed", speed);
-
-        // Normalized speed (0-1 range)
-        float normalizedSpeed = Mathf.Clamp01(speed / (moveSpeed * sprintMultiplier));
-        animator.SetFloat("SpeedNormalized", normalizedSpeed);
-
-        // Is moving boolean
-        bool isMoving = speed > 0.1f;
-        animator.SetBool("IsMoving", isMoving);
-
-        // Is sprinting boolean
-        animator.SetBool("IsSprinting", isSprinting && isMoving);
-
-        // Direction parameters (for blend trees)
-        animator.SetFloat("MoveX", moveX);
-        animator.SetFloat("MoveZ", moveZ);
-
-        // Is grounded
-        animator.SetBool("IsGrounded", isGrounded);
-
-        // Vertical velocity (for jump/fall animations)
-        animator.SetFloat("VerticalVelocity", velocity.y);
     }
 
     void HandleJump()
@@ -159,16 +138,6 @@ public class PlayerController : MonoBehaviour
         if (Input.GetButtonDown("Jump") && isGrounded)
         {
             velocity.y = Mathf.Sqrt(jumpForce * -2f * gravity);
-        }
-    }
-
-    // Optional: Draw ground check gizmo in editor
-    void OnDrawGizmosSelected()
-    {
-        if (groundCheck != null)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawWireSphere(groundCheck.position, groundDistance);
         }
     }
 }
