@@ -64,10 +64,10 @@
     <Compile Include="Assets\TutorialInfo\Scripts\Readme.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Assets\GuidedProject\BeachsideTown\Fonts\OFL.txt" />
     <None Include="Assets\GuidedProject\AlienVideoGameShop\Fonts\OFL.txt" />
     <None Include="Assets\GuidedProject\ArchitecturalRendering\Font\OFL.txt" />
     <None Include="Assets\GuidedProject\Shared\UI\Fonts\OFL.txt" />
+    <None Include="Assets\GuidedProject\BeachsideTown\Fonts\OFL.txt" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="UnityEngine">
